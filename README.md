@@ -1,6 +1,6 @@
-# Loblaw Bio: Immune Cell Population Analysis
+# Immune Cell Population Analysis
 
-Analysis of immune cell counts from Bob Loblaw's clinical trial: a SQLite
+Analysis of immune cell counts from clinical trial: a SQLite
 database built from `cell-count.csv`, a Python analysis of how the drug
 candidate affects five immune cell populations, and an interactive dashboard
 that presents the results.
@@ -63,26 +63,6 @@ cell_counts (sample_id, population_id, count)  ---  cell_populations (population
 - **`cell_populations`** and **`cell_counts`**: counts are stored in long
   format, one row per sample and population.
 
-### Why this design, and how it scales
-
-- **Each fact is stored once.** Correcting a patient's response is a one-row
-  update, not an update to every sample row.
-- **New populations need no schema change.** Adding a sixth cell population, or
-  a few hundred, is an insert into `cell_populations` plus rows in
-  `cell_counts`. Analysis queries group by population, so they keep working
-  unchanged.
-- **Hundreds of projects and thousands of samples.** Projects, subjects and
-  samples are separate tables joined on indexed keys, and the columns the
-  analyses filter on (condition, treatment, response, sample type, timepoint)
-  are indexed, so cohort queries stay index lookups as the data grows.
-  `cell_counts` is keyed on `(sample_id, population_id)` and stored without a
-  separate row id, which keeps the largest table compact.
-- **New kinds of analysis.** Because metadata lives at the level it belongs to,
-  questions such as "frequency over time per subject" or "compare treatments
-  within a condition" are joins and `GROUP BY`s over the existing tables.
-- **Beyond SQLite.** The schema is plain SQL with foreign keys and would move
-  to PostgreSQL as is if many people needed to write to it at once. With more
-  metadata, treatments and sample types would become their own lookup tables.
 
 ## Code structure
 
