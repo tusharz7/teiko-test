@@ -5,7 +5,7 @@ database built from `cell-count.csv`, a Python analysis of how the drug
 candidate affects five immune cell populations, and an interactive dashboard
 that presents the results.
 
-**Dashboard:** <!-- TODO: replace with the deployed URL --> _link to be added after deployment_
+**Dashboard:** https://teiko-test.streamlit.app/
 
 ## Running it
 

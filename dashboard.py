@@ -5,6 +5,8 @@ Usage:
     streamlit run dashboard.py
 """
 
+import os
+import sqlite3
 from pathlib import Path
 
 import plotly.express as px
@@ -89,11 +91,35 @@ def count_bar(df, x, y, color=INDIGO):
 
 
 db_path = ROOT / "cell_counts.db"
-if not db_path.exists():
-    # `make pipeline` normally creates the database. On a fresh checkout (e.g.
-    # the hosted dashboard) build it from the CSV with the same loader logic.
-    with st.spinner("Building the database from cell-count.csv..."):
-        analysis.build_database(db_path=db_path)
+def database_ready(path):
+    """True if the database exists and has samples loaded."""
+    if not path.exists():
+        return False
+    try:
+        with sqlite3.connect(path) as conn:
+            return conn.execute("SELECT COUNT(*) FROM samples").fetchone()[0] > 0
+    except sqlite3.Error:
+        return False
+
+
+@st.cache_resource(show_spinner="Building the database from cell-count.csv...")
+def ensure_database(path):
+    """`make pipeline` normally creates the database. On a fresh checkout (e.g.
+    the hosted dashboard) build it from the CSV with the same loader logic.
+
+    cache_resource makes concurrent sessions wait for a single build, and the
+    build goes to a temporary file that is swapped in once complete, so no
+    session can read a half-loaded database.
+    """
+    if not database_ready(path):
+        tmp_path = path.with_name(path.name + ".tmp")
+        tmp_path.unlink(missing_ok=True)
+        analysis.build_database(db_path=tmp_path)
+        os.replace(tmp_path, path)
+    return True
+
+
+ensure_database(db_path)
 
 load_frequencies = st.cache_data(analysis.frequencies)
 load_cohorts = st.cache_data(analysis.cohort_summary)
