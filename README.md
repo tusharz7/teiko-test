@@ -1,10 +1,5 @@
 # Immune Cell Population Analysis
 
-Analysis of immune cell counts from clinical trial: a SQLite
-database built from `cell-count.csv`, a Python analysis of how the drug
-candidate affects five immune cell populations, and an interactive dashboard
-that presents the results.
-
 **Dashboard:** https://teiko-test.streamlit.app/
 
 ## Running it
