@@ -453,10 +453,7 @@ def dataset_totals(db_path=DB_PATH):
     return dict(zip(["projects", "subjects", "samples", "cells"], row))
 
 
-# =============================================================================
-# CLI entry point - runs the full pipeline and prints a report for each part
-# =============================================================================
-
+# runs the full pipeline and prints a report for each part
 if __name__ == "__main__":
     # load_data.py is the loader; only build here if it hasn't been run.
     if not DB_PATH.exists():
