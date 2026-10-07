@@ -35,30 +35,6 @@ notification or the **Ports** tab.
 
 `cell_counts.db` and `outputs/` are generated, so they are not committed.
 
-## Database schema
-
-```
-projects (project_id)
-    |
-subjects (subject_id, project_id, condition, age, sex, treatment, response)
-    |
-samples (sample_id, subject_id, sample_type, time_from_treatment_start)
-    |
-cell_counts (sample_id, population_id, count)  ---  cell_populations (population_id, name)
-```
-
-- **`projects`**: one row per project.
-- **`subjects`**: one row per patient. Condition, age, sex, treatment and
-  response are the same on every one of a patient's samples, so they are stored
-  once here. The loader stops with an error if a file ever contradicts that.
-  Response is `NULL` for subjects with no recorded response (the untreated
-  healthy controls).
-- **`samples`**: one row per biological sample, i.e. one patient at one
-  timepoint.
-- **`cell_populations`** and **`cell_counts`**: counts are stored in long
-  format, one row per sample and population.
-
-
 ## Code structure
 
 | File | Role |
@@ -94,17 +70,3 @@ closest to the data; pandas and SciPy are used only for the statistics.
 - **Part 4**: baseline (time 0) melanoma PBMC samples from miraclib-treated
   patients: 656 samples from 656 subjects, 384 in prj1 and 272 in prj3;
   331 responders and 325 non-responders; 344 male and 312 female.
-
-## Dashboard
-
-Four tabs: an overview of the dataset, then one tab per part.
-
-- **Overview**: totals, and samples by condition, treatment, project and
-  sample type.
-- **Part 2**: the frequency table, with a sample filter and a composition chart.
-- **Part 3**: the statistics table ranked by adjusted p-value, and boxplots of
-  each population for responders and non-responders.
-- **Part 4**: the baseline subset broken down by project, response and sex.
-
-The dashboard reads `cell_counts.db` as created by `make pipeline`. If the
-file is missing, it builds the database from `cell-count.csv` on first load.
