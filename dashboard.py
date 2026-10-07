@@ -121,14 +121,21 @@ def ensure_database(path):
 
 ensure_database(db_path)
 
-load_frequencies = st.cache_data(analysis.frequencies)
-load_cohorts = st.cache_data(analysis.cohort_summary)
-load_totals = st.cache_data(analysis.dataset_totals)
-load_responders = st.cache_data(analysis.responder_frequencies)
-load_baseline = st.cache_data(analysis.baseline_subset)
+# Identifies the database file's current contents. It is part of every cache
+# key below, so results cached from an older or incomplete database are never
+# reused after the file changes.
+_stat = db_path.stat()
+db_version = (_stat.st_mtime_ns, _stat.st_size)
 
-cohorts = load_cohorts(db_path)
-totals = load_totals(db_path)
+
+@st.cache_data
+def query(name, version, *args):
+    """Run one of the analysis.py queries, cached per database version."""
+    return getattr(analysis, name)(db_path, *args)
+
+
+cohorts = query("cohort_summary", db_version)
+totals = query("dataset_totals", db_version)
 
 # Parts 3 and 4 look at the cohort Bob asked about.
 condition = analysis.DEFAULT_CONDITION
@@ -215,7 +222,7 @@ with overview_tab:
 # ---------------------------------------------------------------------------
 with tab2:
     st.subheader("Relative Frequency of Each Cell Population per Sample")
-    freq_df = load_frequencies(db_path)
+    freq_df = query("frequencies", db_version)
 
     samples = sorted(freq_df["sample"].unique())
     # The filter widget is drawn at the bottom of the tab, so read its value
@@ -279,7 +286,9 @@ with tab2:
 with tab3:
     st.subheader("Responders vs Non-Responders")
     st.caption(f"Cohort: {cohort_label}")
-    resp_df = load_responders(db_path, condition, treatment, sample_type)
+    resp_df = query(
+        "responder_frequencies", db_version, condition, treatment, sample_type
+    )
     stats_df = analysis.responder_stats(resp_df)
 
     if stats_df.empty:
@@ -378,7 +387,9 @@ with tab3:
 with tab4:
     st.subheader("Baseline (Day 0) Samples")
     st.caption(f"Cohort: {cohort_label}")
-    baseline_df = load_baseline(db_path, condition, treatment, sample_type)
+    baseline_df = query(
+        "baseline_subset", db_version, condition, treatment, sample_type
+    )
 
     if baseline_df.empty:
         st.warning(
