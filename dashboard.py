@@ -206,17 +206,8 @@ with tab2:
     left, right = st.columns([3, 2])
     with left, st.container(border=True):
         st.markdown("**Frequency Table**")
-        table(
-            view,
-            height=420,
-            column_config={
-                "sample": "Sample",
-                "total_count": "Total Count",
-                "population": "Population",
-                "count": "Count",
-                "percentage": "Percentage",
-            },
-        )
+        # Column names are left exactly as the assignment specifies them.
+        table(view, height=420)
     with right, st.container(border=True):
         if selected and len(selected) <= 25:
             st.markdown("**Composition of Selected Samples**")
@@ -281,17 +272,34 @@ with tab3:
             "Non-Responder Samples",
             f"{(per_sample['response'] == 'Non-Responder').sum():,}",
         )
-        c4.metric("Significant Populations", f"{len(significant)} of {len(stats_df)}")
+        c4.metric(
+            "Significant After Correction", f"{len(significant)} of {len(stats_df)}"
+        )
 
-        if significant.empty:
+        # Populations below 0.05 before correction but not after it.
+        uncorrected_only = stats_df[
+            (stats_df["p_value"] < 0.05) & ~stats_df["significant"]
+        ]
+        if not significant.empty:
+            names = ", ".join(significant["population"])
+            st.success(
+                f"Significant difference after correction (adjusted p < 0.05) in: {names}"
+            )
+        if not uncorrected_only.empty:
+            details = "; ".join(
+                f"{row.population} (p = {row.p_value:.3f}, adjusted p = {row.p_adj:.3f})"
+                for row in uncorrected_only.itertuples()
+            )
+            st.info(
+                f"Significant before correction only (p < 0.05): {details}. "
+                f"The difference does not survive Benjamini-Hochberg correction "
+                f"for testing {len(stats_df)} populations."
+            )
+        if significant.empty and uncorrected_only.empty:
             st.info(
                 "No cell population shows a statistically significant difference "
-                "between responders and non-responders after FDR correction "
-                "(adjusted p < 0.05)."
+                "between responders and non-responders, before or after correction."
             )
-        else:
-            names = ", ".join(significant["population"])
-            st.success(f"Significant difference (adjusted p < 0.05) in: {names}")
 
         with st.container(border=True):
             st.markdown("**Populations Ranked by Adjusted P-Value**")

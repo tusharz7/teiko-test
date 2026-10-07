@@ -110,9 +110,12 @@ closest to the data; pandas and SciPy are used only for the statistics.
   that need not be normally distributed. The five p-values are
   Benjamini-Hochberg adjusted, and a population is called significant at
   adjusted p < 0.05.
-  **Result:** no population differs significantly after adjustment. CD4 T
-  cells come closest (p = 0.013, adjusted p = 0.067), with a slightly higher
-  median frequency in responders (30.22% against 29.66%).
+  **Result:** CD4 T cells (`cd4_t_cell`) are the only population that differs
+  at p < 0.05 before correction (p = 0.013), with a slightly higher median
+  frequency in responders (30.22% against 29.66%). That difference does not
+  survive correction for testing five populations (adjusted p = 0.067), so no
+  population is significant after adjustment. The dashboard reports both the
+  raw and the adjusted p-value for every population.
 - **Part 4**: baseline (time 0) melanoma PBMC samples from miraclib-treated
   patients: 656 samples from 656 subjects, 384 in prj1 and 272 in prj3;
   331 responders and 325 non-responders; 344 male and 312 female.
